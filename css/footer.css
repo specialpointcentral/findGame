@@ -1,0 +1,30 @@
+.footers {
+	padding: 0px 20px;
+	background: #00A2EA;
+    width: 100%;
+    position:absolute;
+    bottom:0;
+    width:100%;
+}
+.footers a {
+	font-size: 14px;
+	color:#ffffff;
+	text-decoration:none;
+	font-family: "微软雅黑","宋体";
+}
+
+.container {
+	padding-bottom:125px;
+}
+
+html{
+	height:100%;
+}
+
+body{
+	min-height:100%;
+	margin:0;
+	padding:0;
+	position:relative;
+	font-family: font-family: "Helvetica Neue",Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","WenQuanYi Micro Hei",sans-serif;;
+}
