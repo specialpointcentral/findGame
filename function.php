@@ -4,23 +4,20 @@
  * User: huqi1
  * Date: 2018/1/17
  * Time: 21:31
- * TODO
  * function collection
- * this include that:
- * 1* error page:'noCertification'
- * 2* finish page:'finishGame'
  */
+require_once "config.php";
 /**
+ * 扫码错误统一页面格式
  * @param $reasonTitle the reason title why give error page
  * @param $reasonTxt the reason why give error page
  */
-require_once "config.php";
 function noCertification($reasonTitle,$reasonTxt)
 {
     $config=$GLOBALS['config'];
     $mysql=new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
     if(mysqli_connect_errno()){
-        echo 'mysqli Connect is error'.mysqli_connect_error();
+        echo 'Database Connect is error - '.mysqli_connect_error();
         exit();
     }
     $mysql->set_charset("utf8");
@@ -31,6 +28,7 @@ function noCertification($reasonTitle,$reasonTxt)
 
     $mainTitle=$row['title'];
     $user=$row['user'];
+    $mysql->close();
     echo<<<EOF
     <!DOCTYPE html>
         <html>
@@ -71,9 +69,6 @@ function noCertification($reasonTitle,$reasonTxt)
                     <a>&copy;SPC | HITwh CST</a>
                     <br/>
                     <a>{$user}</a>
-                    <div style="display:none">
-                    <script src="https://s4.cnzz.com/z_stat.php?id=1261688187&web_id=1261688187" language="JavaScript"></script>
-                    </div>
                 </div>
             </body>
     </html>
@@ -82,40 +77,43 @@ EOF;
 }
 
 /**
- * @param $IDnums this is the ID numbers that used to help gamers to identify who is
+ * 活动页面统一格式
+ * @param $mainTitle 网页标题
+ * @param $gameName 活动名称
+ * @param $runLevel 正在进行的步骤，最后一步完成为总步骤+1
+ * @param $allLevel 总步骤
+ * @param $IDnums ID号
+ * @param $infoText 主体内容
+ * @param $user 举办者
+ * @param $restNumber 剩余晋级数
+ * @return string 页面
  */
-function finishGame($IDnums){
-    $config=$GLOBALS['config'];
-    $mysql=new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
-    if(mysqli_connect_errno()){
-        echo 'mysqli Connect is error'.mysqli_connect_error();
-        exit();
-    }
-    $mysql->set_charset("utf8");
-
-    $sq = "SELECT * FROM config";
-    $result = $mysql->query($sq);
-    $row = $result->fetch_array();
-
-    $mainTitle=$row['title'];
-    $user=$row['user'];
-    $gameName=$row['gamename'];
-
-    $sq = "SELECT * FROM finishconfig";
-    $result = $mysql->query($sq);
-    $row = $result->fetch_array();
-
-    $infoTitle=$row['infotitle'];
-    $infoText=$row['infotext'];
-
-    echo<<<EOF
+function gamePage($mainTitle,$gameName,$runLevel,$allLevel,$IDnums,$infoText,$user,$restNumber){
+    $finishBar=($runLevel==$allLevel+1?"progress-bar-success":"progress-bar-info");//进度条颜色
+    $finishIco=($runLevel==$allLevel+1?"glyphicon-ok":"glyphicon-map-marker");//图形样式
+    if($allLevel!=0)
+        $process=(int)($runLevel/$allLevel)*100;//进度条长短
+    else $process=0;
+    $processNote=($runLevel==$allLevel+1?"完成任务":" Step "+$runLevel);//进度条说明文字
+    $infoTitle=($runLevel==$allLevel+1?"你已经完成了任务，祝贺你！":" 你现在位于第"+$runLevel+"步，共"+$allLevel+"步，加油~");//进度提示说明文字
+    if($runLevel==$allLevel){//晋级名额剩余提示
+        if ($restNumber<0)
+        $haveFinish="";
+        else $haveFinish=<<<EOF
+        <br />
+        <span class="glyphicon glyphicon-tags" aria-hidden="true"></span>
+		<span class="sr-only">cardreset:</span>
+		晋级名额剩余：{$restNumber}
+EOF;
+    }else $haveFinish="";
+    return<<<EOF
     <!DOCTYPE html>
     <html lang="zh-CN">
         <head>
             <meta charset="utf-8" />
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>祝贺！-{$mainTitle}</title>
+            <title>{$mainTitle}</title>
             <link rel="shortcut icon" href="/favicon.ico" >
             <link rel="stylesheet" href="css/bootstrap.min.css" />
             <link rel="stylesheet" href="css/footer.css" />
@@ -131,18 +129,19 @@ function finishGame($IDnums){
                 </div>
     
                 <div class="progress">
-                    <div class="progress-bar progress-bar-success" role="progressbar" style="width: 100%; min-width:3em">
-                        完成任务
+                    <div class="progress-bar {$finishBar}" role="progressbar" style="width: {$process}%; min-width:3em">
+                        {$processNote}
                     </div>
                 </div>
                 
                 <div class="alert alert-info" role="info">
-                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                    <span class="glyphicon {$finishIco}" aria-hidden="true"></span>
                     <span class="sr-only">info:</span>
                       {$infoTitle}<br />
                      <span class="glyphicon glyphicon-user"aria-hidden="true"></span>
                      <span class="sr-only">user:</span>
                      你的学号是{$IDnums}，如有错误请<a style="color:goldenrod;" href="/id.php?key=clean">点击这里</a>。
+                     {$haveFinish}
                 </div>
                 
                 <div class="panel panel-default">
@@ -161,15 +160,48 @@ function finishGame($IDnums){
                 <a>&copy;SPC | HITwh CST</a>
                 <br/>
                 <a>{$user}</a>
-                <div style="display:none">
-                <script src="https://s4.cnzz.com/z_stat.php?id=1261688187&web_id=1261688187" language="JavaScript"></script>
-                </div>
             </div>
         </body>
     </html>
 EOF;
+}
+
+/**
+ * 完成游戏
+ * @param $IDnums this is the ID numbers that used to help gamers to identify who is
+ */
+function finishGame($IDnums){
+    $config=$GLOBALS['config'];
+    $mysql=new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
+    if(mysqli_connect_errno()){
+        echo 'Database Connect is error - '.mysqli_connect_error();
+        exit();
+    }
+    $mysql->set_charset("utf8");
+
+    $sq = "SELECT * FROM config";
+    $result = $mysql->query($sq);
+    $row = $result->fetch_array();
+
+    $mainTitle=$row['title'];
+    $user=$row['user'];
+    $gameName=$row['gamename'];
+
+    $sq = "SELECT * FROM finishconfig";
+    $result = $mysql->query($sq);
+    $row = $result->fetch_array();
+
+    $infoText=$row['infotext'];
+    $mysql->close();
+
+    echo gamePage("祝贺 - "+$mainTitle,$gameName,2,1,$IDnums,$infoText,$user);
     exit;
 }
 
-
+/**
+ *
+ */
+function getStep(){
+//TODO
+}
 ?>

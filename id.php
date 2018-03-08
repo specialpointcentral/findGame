@@ -4,7 +4,6 @@
  * User: huqi1
  * Date: 2018/1/15
  * Time: 12:40
- * TODO
  * this page is used to identify the player
  * players need to input their id number and page will redirect to the play page
  * also if players input error id, this page will process the error requests
@@ -12,24 +11,31 @@
 require_once "config.php";
 date_default_timezone_set('Asia/Shanghai');
 session_start();
-if ($_GET['key']=="clean")
+if (isset($_GET['key'])&&$_GET['key']=="clean")
 {
     //clear session, marked id number is wrong and user require.
     unset($_SESSION['IDnum']);
-    //postkey is used to transfer to the play.php
-    //this is the key identify this step is the needed
-    $postkey="reset";
+    $postkey="";
 }
 else
 {
-    $postkey=$_GET['key'];
+    $postkey=isset($_GET['key'])?$_GET['key']:"";
 }
-if (isset($_SESSION['IDnum'])&&!empty($_SESSION['IDnum']))
+if (isset($_SESSION['IDnum'])&&!empty(trim($_SESSION['IDnum'])))
 {
     //session is exist
     //this need we direct to play.php to process the require
-    header("Location: /play.php?key=".$postkey);
+    header("Location: play.php?key=".$postkey);
     exit;
+}else{
+    //find the post
+    if(isset($_POST['IDnum'])&&!empty(trim($_POST['IDnum']))){
+        //IDnum get
+        $_SESSION['IDnum']=$_POST['IDnum'];//session
+        //redirect to play
+        header("Location: play.php?key=".$postkey);
+        exit;
+    }
 }
 
 /**
@@ -38,7 +44,7 @@ if (isset($_SESSION['IDnum'])&&!empty($_SESSION['IDnum']))
 
 $mysql=new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
 if(mysqli_connect_errno()){
-    echo 'mysqli Connect is error'.mysqli_connect_error();
+    echo 'Database Connect is error - '.mysqli_connect_error();
     exit();
 }
 $mysql->set_charset("utf8");
@@ -49,11 +55,18 @@ $row=$result->fetch_array();
 $user=$row['user'];
 $startTime=$row['startTime'];
 $mainTitle=$row['title'];
+$endTime=$row['endTime'];
 
 if (strtotime(date("y-m-d H:i:s"))<=strtotime($startTime)){
     // is not touch the time
     $mysql->close();
     header("Location: index.php");
+    exit;
+}elseif(strtotime(date("y-m-d H:i:s"))>=strtotime($endTime)){
+    // game is over
+    $mysql->close();
+    header("http/1.1 403 forbidden");
+    echo("游戏已经结束");
     exit;
 }
 
@@ -91,7 +104,7 @@ echo<<<EOF
 				</div>
 			</div>
 			
-			<form action="play.php?key={$postkey}" method="post">
+			<form action="id.php?key={$postkey}" method="post">
 				<label for="IDnum">这儿填写你的学号</label>
 				<div class="input-group input-group-lg">
 				  <span class="input-group-addon" id="addon"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></span>
@@ -107,9 +120,6 @@ echo<<<EOF
 			<a>&copy;SPC | HITwh CST</a>
 			<br/>
 			<a>{$user}</a>
-			<div style="display:none">
-			<script src="https://s4.cnzz.com/z_stat.php?id=1261688187&web_id=1261688187" language="JavaScript"></script>
-			</div>
 		</div>
 	</body>
 </html>

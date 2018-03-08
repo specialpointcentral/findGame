@@ -4,7 +4,6 @@
  * User: huqi1
  * Date: 2018/1/13
  * Time: 19:42
- * TODO
  * This is the first page before the game.
  * This page is used to tips player game is not begging.
  *
@@ -14,7 +13,7 @@ require_once "config.php";
 date_default_timezone_set('Asia/Shanghai');
 $mysql=new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
 if(mysqli_connect_errno()){
-    echo 'mysqli Connect is error'.mysqli_connect_error();
+    echo 'Database Connect is error - '.mysqli_connect_error();
     exit();
 }
 $mysql->set_charset("utf8");
@@ -127,9 +126,6 @@ if (strtotime(date("y-m-d H:i:s"))>=strtotime($startTime)) {
 		<a>&copy;SPC | HITwh CST</a>
 		<br/>
 		<a>{$user}</a>
-		<div style="display:none">
-		<script src="https://s4.cnzz.com/z_stat.php?id=1261688187&web_id=1261688187" language="JavaScript"></script>
-		</div>
 	</div>
 	<script  src="js/jquery-2.1.0.js"></script>
 	<script type="text/javascript" src="js/moment.js"></script>
