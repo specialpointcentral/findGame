@@ -125,5 +125,4 @@ echo<<<EOF
 </html>
 EOF;
 
-
 ?>

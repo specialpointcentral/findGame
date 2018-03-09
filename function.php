@@ -9,15 +9,15 @@
 require_once "config.php";
 /**
  * 扫码错误统一页面格式
- * @param $reasonTitle the reason title why give error page
- * @param $reasonTxt the reason why give error page
+ * @param $reasonTitle <pre>the reason title why give error page</pre>
+ * @param $reasonTxt <pre>the reason why give error page (HTML)</pre>
  */
-function noCertification($reasonTitle,$reasonTxt)
+function noCertification($reasonTitle, $reasonTxt)
 {
-    $config=$GLOBALS['config'];
-    $mysql=new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
-    if(mysqli_connect_errno()){
-        echo 'Database Connect is error - '.mysqli_connect_error();
+    $config = $GLOBALS['config'];
+    $mysql = new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
+    if (mysqli_connect_errno()) {
+        echo 'Database Connect is error - ' . mysqli_connect_error();
         exit();
     }
     $mysql->set_charset("utf8");
@@ -26,10 +26,10 @@ function noCertification($reasonTitle,$reasonTxt)
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
-    $mainTitle=$row['title'];
-    $user=$row['user'];
+    $mainTitle = $row['title'];
+    $user = $row['user'];
     $mysql->close();
-    echo<<<EOF
+    echo <<<EOF
     <!DOCTYPE html>
         <html>
             <head>
@@ -80,7 +80,7 @@ EOF;
  * 活动页面统一格式
  * @param $mainTitle 网页标题
  * @param $gameName 活动名称
- * @param $runLevel 正在进行的步骤，最后一步完成为总步骤+1
+ * @param $runLevel 正在进行的步骤，最后一步完成为总步骤加一
  * @param $allLevel 总步骤
  * @param $IDnums ID号
  * @param $infoText 主体内容
@@ -88,25 +88,27 @@ EOF;
  * @param $restNumber 剩余晋级数
  * @return string 页面
  */
-function gamePage($mainTitle,$gameName,$runLevel,$allLevel,$IDnums,$infoText,$user,$restNumber){
-    $finishBar=($runLevel==$allLevel+1?"progress-bar-success":"progress-bar-info");//进度条颜色
-    $finishIco=($runLevel==$allLevel+1?"glyphicon-ok":"glyphicon-map-marker");//图形样式
-    if($allLevel!=0)
-        $process=(int)($runLevel/$allLevel)*100;//进度条长短
-    else $process=0;
-    $processNote=($runLevel==$allLevel+1?"完成任务":" Step "+$runLevel);//进度条说明文字
-    $infoTitle=($runLevel==$allLevel+1?"你已经完成了任务，祝贺你！":" 你现在位于第"+$runLevel+"步，共"+$allLevel+"步，加油~");//进度提示说明文字
-    if($runLevel==$allLevel){//晋级名额剩余提示
-        if ($restNumber<0)
-        $haveFinish="";
-        else $haveFinish=<<<EOF
+function gamePage($mainTitle, $gameName, $runLevel, $allLevel, $IDnums, $infoText, $user, $restNumber)
+{
+    $finishBar = ($runLevel == $allLevel + 1) ? "progress-bar-success" : "progress-bar-info";//进度条颜色
+    $finishIco = ($runLevel == $allLevel + 1) ? "glyphicon-ok" : "glyphicon-map-marker";//图形样式
+    if ($allLevel != 0) {
+        $process = (int)($runLevel / $allLevel * 100);//进度条长短
+        if($process>100) $process=100;
+    } else $process = 0;
+    $processNote = ($runLevel == $allLevel + 1) ? "完成任务" : " Step " . $runLevel;//进度条说明文字
+    $infoTitle = ($runLevel == $allLevel + 1) ? "你已经完成了任务，祝贺你！" : "你现在位于第" . $runLevel . "步，共" . $allLevel . "步，加油~";//进度提示说明文字
+    if ($runLevel == $allLevel) {//晋级名额剩余提示
+        if ($restNumber < 0)
+            $haveFinish = "";
+        else $haveFinish = <<<EOF
         <br />
         <span class="glyphicon glyphicon-tags" aria-hidden="true"></span>
 		<span class="sr-only">cardreset:</span>
 		晋级名额剩余：{$restNumber}
 EOF;
-    }else $haveFinish="";
-    return<<<EOF
+    } else $haveFinish = "";
+    return <<<EOF
     <!DOCTYPE html>
     <html lang="zh-CN">
         <head>
@@ -170,11 +172,12 @@ EOF;
  * 完成游戏
  * @param $IDnums this is the ID numbers that used to help gamers to identify who is
  */
-function finishGame($IDnums){
-    $config=$GLOBALS['config'];
-    $mysql=new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
-    if(mysqli_connect_errno()){
-        echo 'Database Connect is error - '.mysqli_connect_error();
+function finishGame($IDnums)
+{
+    $config = $GLOBALS['config'];
+    $mysql = new mysqli($config["SQL_URL"], $config["SQL_User"], $config["SQL_Password"], $config["SQL_Database"], $config["SQL_Port"]);
+    if (mysqli_connect_errno()) {
+        echo 'Database Connect is error - ' . mysqli_connect_error();
         exit();
     }
     $mysql->set_charset("utf8");
@@ -183,25 +186,27 @@ function finishGame($IDnums){
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
-    $mainTitle=$row['title'];
-    $user=$row['user'];
-    $gameName=$row['gamename'];
+    $mainTitle = $row['title'];
+    $user = $row['user'];
+    $gameName = $row['gamename'];
 
     $sq = "SELECT * FROM finishconfig";
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
-    $infoText=$row['infotext'];
+    $infoText = $row['infotext'];
     $mysql->close();
 
-    echo gamePage("祝贺 - "+$mainTitle,$gameName,2,1,$IDnums,$infoText,$user);
+    echo gamePage("祝贺 - " + $mainTitle, $gameName, 2, 1, $IDnums, $infoText, $user, 0);
     exit;
 }
 
 /**
  *
  */
-function getStep(){
+function getStep()
+{
 //TODO
 }
+
 ?>
