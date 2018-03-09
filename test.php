@@ -7,7 +7,7 @@
  */
 
 include_once "function.php";
-//echo gamePage("mainTitle","gameName",4,3,1,"infoText","user",5);
+echo gamePage("mainTitle","gameName",4,3,1,"infoText","user",5);
 //echo noCertification("reasonTitle","reasonTxt");
-finishGame(1);
+//finishGame(1);
 ?>

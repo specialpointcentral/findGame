@@ -35,7 +35,7 @@ class stepInfo
         if ($this->over == true) return true;//游戏完成一直返回true
         if ($this->passKey == "over") {
             //说明进入晋级项
-            $sq = "SELECT * FROM `tbl_finish` WHERE `passkey` = " . $passkey . "AND `isUsed` = 0";
+            $sq = "SELECT * FROM `tbl_finish` WHERE `passkey` = '" . $passkey . "' AND `isUsed` = '0'";
             $result = $this->sqlquery($sq);
             if ($result->num_rows == 0) return false;
             else return true;
@@ -50,14 +50,14 @@ class stepInfo
     /**
      * 获取下一个项目信息，passkey正确才能进行
      * @param $passkey
-     * @return int 0-success 1-其他环节出错 2-晋级出错
+     * @return int 0-success 1-其他环节出错 2,3-晋级出错
      */
     public function getNextInfo($passkey)
     {
         //先对$passkey检查
         if (!preg_match("/^[a-z\d]*$/i", $passkey)) $passkey == "reset";
         //如果passkey是reset和空，显示最近的项目
-        if ($passkey == "reset" || empty($passkey)) {
+        if ($passkey == "reset" || empty(trim($passkey))) {
             $this->showNearTask();
 
             return 0;
@@ -67,23 +67,28 @@ class stepInfo
         if ($this->passKey == "over") {
             if ($this->checkPasskey($passkey)) {
                 //密钥正确，记录密钥
-                $sq = "UPDATE `tbl_finish` SET `isUsed` = '1',`useClub`= '" . $this->club . "' WHERE `passkey`= " . $passkey;
+                $sq = "UPDATE `tbl_finish` SET `isUsed` = '1',`useClub`= '" . $this->club . "' WHERE `passkey`= '" . $passkey . "'";
                 $this->sqlquery($sq);
                 //设置记录，完成游戏
-                $sq = "UPDATE `tbl_process` SET `finish` = '1' WHERE `passkey`= 'over' AND `clubID`= " . $this->club;
+                $sq = "UPDATE `tbl_process` SET `finish` = '1' WHERE `passkey`= 'over' AND `clubID`= '" . $this->club . "'";
                 $this->sqlquery($sq);
 
                 $this->setNextInfo();
                 return 0;
             } else {
                 //密钥错误
-                return 2;//晋级出错
+                //晋级出错
+                $sq = "SELECT * FROM `tbl_finish` WHERE `passkey` = '" . $passkey . "' LIMIT 1";
+                $result = $this->sqlquery($sq);
+                if ($result->num_rows != 0)
+                    return 2;//说明失效
+                else return 3;//不存在
             }
         }
         //判断passkey是否正确，正确启动下一个，不正确返回错误代码
         if ($this->checkPasskey($passkey)) {
             //设置完成
-            $sq = "UPDATE `tbl_process` SET `finish` = '1' WHERE `passkey`= " . $passkey . " AND `clubID`= " . $this->club;
+            $sq = "UPDATE `tbl_process` SET `finish` = '1' WHERE `passkey`= '" . $passkey . "' AND `clubID`= '" . $this->club . "'";
             $this->sqlquery($sq);
 
             $this->setNextInfo();
@@ -107,13 +112,17 @@ class stepInfo
         }
         //如果新建立的用户，然后开始任务
         //其他根据进度安排
-        $sq = "SELECT COUNT(*) FROM `tbl_process` WHERE `clubID`=" . $this->club;
+        $sq = "SELECT COUNT(*) FROM `tbl_process` WHERE `clubID`='" . $this->club . "'";
         $result = $this->sqlquery($sq);
+        $result = $result->fetch_array(MYSQLI_NUM);
+        $result = $result[0];
+
         if ($result == 0) {
             //没有记录，说明刚刚开始，开始分配
             //获取第一步的数据
-            $sq = "SELECT `passkey` FROM `tbl_content` WHERE `levelNumber`= 1";
+            $sq = "SELECT `passkey` FROM `tbl_content` WHERE `levelNumber`= '1'";
             $result = $this->sqlquery($sq);
+
             //随机选取
             $row = $result->fetch_all(MYSQLI_ASSOC);
             $this->passKey = $row[rand(0, $result->num_rows - 1)]['passkey'];
@@ -145,7 +154,7 @@ class stepInfo
                 } else {
                     //不是晋级赛
                     $this->gameStep++;
-                    $sq = "SELECT `passkey` FROM `tbl_content` WHERE `levelNumber`= " . $this->gameStep;
+                    $sq = "SELECT `passkey` FROM `tbl_content` WHERE `levelNumber`= '" . $this->gameStep . "'";
                     $result = $this->sqlquery($sq);
                     //随机选取
                     $row = $result->fetch_all(MYSQLI_ASSOC);
@@ -168,9 +177,12 @@ class stepInfo
 
         //获取总步骤
         $sq = "SELECT COUNT(DISTINCT(`levelNumber`)) FROM `tbl_content`";
-        $this->allStep = $this->sqlquery($sq);
+        $result = $this->sqlquery($sq);
+        $result = $result->fetch_array(MYSQLI_NUM);
+        $result = $result[0];
+        $this->allStep = $result;
         //获取组号，查找数据库，如没有对应，则创建
-        $sq = "SELECT * FROM `tbl_club` WHERE `schoolID` = " . $this->idnum . " LIMIT 1";
+        $sq = "SELECT * FROM `tbl_club` WHERE `schoolID` = '" . $this->idnum . "' LIMIT 1";
         $result = $this->sqlquery($sq);
         if ($result->num_rows == 0) {
             //没有信息，建立信息，组号不进行检查，采用学号
@@ -185,7 +197,7 @@ class stepInfo
 
 
         //获取进行的passkey，游戏进行的步骤，注意最后晋级的时候passkey等会异常，采用over标志
-        $sq = "SELECT `passkey` FROM `tbl_process` WHERE `finish`= 0 AND `clubID` = " . $this->idnum . "  LIMIT 1";
+        $sq = "SELECT `passkey` FROM `tbl_process` WHERE `finish`= 0 AND `clubID` = '" . $this->idnum . "'  LIMIT 1";
         $result = $this->sqlquery($sq);
         //判断是否完成项目
         if ($result->num_rows == 0) {
@@ -198,7 +210,7 @@ class stepInfo
             $row = $result->fetch_array();
             $this->passKey = $row['passkey'];
             //获取level
-            $sq = "SELECT `levelNumber` FROM `tbl_content` WHERE `passkey` = " . $this->passKey . "  LIMIT 1";
+            $sq = "SELECT `levelNumber` FROM `tbl_content` WHERE `passkey` = '" . $this->passKey . "'  LIMIT 1";
             $result = $this->sqlquery($sq);
             $row = $result->fetch_array();
             $this->gameStep = $row['levelNumber'];
@@ -206,7 +218,7 @@ class stepInfo
 
         //获取显示信息
         if ($this->passKey != null) {
-            $sq = "SELECT `content` FROM `tbl_content` WHERE `passkey` = " . $this->passKey . "  LIMIT 1";
+            $sq = "SELECT `content` FROM `tbl_content` WHERE `passkey` = '" . $this->passKey . "'  LIMIT 1";
             $result = $this->sqlquery($sq);
             $row = $result->fetch_array();
             $this->showInfo = $row['content'];
@@ -222,8 +234,11 @@ class stepInfo
             $this->over = true;
         }
         //获取剩余晋级数
-        $sq = "SELECT COUNT(*) FROM `tbl_process` WHERE `finish`= 0 ";
-        $this->restNumber = $this->sqlquery($sq);
+        $sq = "SELECT COUNT(*) FROM `tbl_process` WHERE `finish`= '0' ";
+        $result = $this->sqlquery($sq);
+        $result = $result->fetch_array(MYSQLI_NUM);
+        $result = $result[0];
+        $this->restNumber = $result;
 
     }
 

@@ -88,7 +88,7 @@ EOF;
  * @param $restNumber 剩余晋级数
  * @return string 页面
  */
-function gamePage($mainTitle, $gameName, $runLevel, $allLevel, $IDnums, $infoText, $user, $restNumber)
+function gamePage($mainTitle, $gameName, int $runLevel, int $allLevel, $IDnums, $infoText, $user, $restNumber)
 {
     $finishBar = ($runLevel == $allLevel + 1) ? "progress-bar-success" : "progress-bar-info";//进度条颜色
     $finishIco = ($runLevel == $allLevel + 1) ? "glyphicon-ok" : "glyphicon-map-marker";//图形样式
@@ -142,7 +142,7 @@ EOF;
                       {$infoTitle}<br />
                      <span class="glyphicon glyphicon-user"aria-hidden="true"></span>
                      <span class="sr-only">user:</span>
-                     你的学号是{$IDnums}，如有错误请<a style="color:goldenrod;" href="/id.php?key=clean">点击这里</a>。
+                     你的学号是{$IDnums}，如有错误请<a style="color:goldenrod;" href="id.php?key=clean">点击这里</a>。
                      {$haveFinish}
                 </div>
                 
@@ -182,7 +182,7 @@ function finishGame($IDnums)
     }
     $mysql->set_charset("utf8");
 
-    $sq = "SELECT * FROM config";
+    $sq = "SELECT * FROM config LIMIT 1";
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
@@ -190,14 +190,14 @@ function finishGame($IDnums)
     $user = $row['user'];
     $gameName = $row['gamename'];
 
-    $sq = "SELECT * FROM finishconfig";
+    $sq = "SELECT * FROM `finishconfig`";
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
     $infoText = $row['infotext'];
     $mysql->close();
 
-    echo gamePage("祝贺 - " + $mainTitle, $gameName, 2, 1, $IDnums, $infoText, $user, 0);
+    echo gamePage("祝贺 - " . $mainTitle, $gameName, 2, 1, $IDnums, $infoText, $user, 0);
     exit;
 }
 
