@@ -197,13 +197,35 @@ class stepInfo
 
 
         //获取进行的passkey，游戏进行的步骤，注意最后晋级的时候passkey等会异常，采用over标志
-        $sq = "SELECT `passkey` FROM `tbl_process` WHERE `finish`= 0 AND `clubID` = '" . $this->idnum . "'  LIMIT 1";
+        //注意passkey得不到的时候可能是游戏刚刚开始
+        $sq = "SELECT `passkey` FROM `tbl_process` WHERE `finish`= 0 AND `clubID` = '" . $this->club . "'  LIMIT 1";
         $result = $this->sqlquery($sq);
         //判断是否完成项目
         if ($result->num_rows == 0) {
-            //完成
-            $this->passKey = null;
-            $this->gameStep = $this->allStep + 1;
+            $sq = "SELECT COUNT(*) FROM `tbl_process` WHERE `clubID`='" . $this->club . "' AND `passkey`='over'";
+            $get = $this->sqlquery($sq);
+            $get = $get->fetch_array(MYSQLI_NUM);
+            $get = $get[0];
+            if($get==0){
+                //说明游戏还没分配任务
+                //获取第一步的数据
+                $sq = "SELECT `passkey` FROM `tbl_content` WHERE `levelNumber`= '1'";
+                $results = $this->sqlquery($sq);
+
+                //随机选取
+                $row = $results->fetch_all(MYSQLI_ASSOC);
+                $this->passKey = $row[rand(0, $results->num_rows - 1)]['passkey'];
+                //更新数据库，加入进程表
+                $sq = "INSERT INTO `tbl_process` ( `clubID`, `passkey`, `finish`) VALUES ( '" . $this->club . "', '" . $this->passKey . "', '0')";
+                $this->sqlquery($sq);
+                $this->showNearTask();//获取最新的信息
+
+            }else{
+                //完成
+                $this->passKey = null;
+                $this->gameStep = $this->allStep + 1;
+
+            }
         } else {
             //未完成
             //获取passkey
@@ -234,7 +256,7 @@ class stepInfo
             $this->over = true;
         }
         //获取剩余晋级数
-        $sq = "SELECT COUNT(*) FROM `tbl_process` WHERE `finish`= '0' ";
+        $sq = "SELECT COUNT(*) FROM `tbl_finish` WHERE `isUsed`= '0' ";
         $result = $this->sqlquery($sq);
         $result = $result->fetch_array(MYSQLI_NUM);
         $result = $result[0];

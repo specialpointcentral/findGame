@@ -86,18 +86,19 @@ EOF;
  * @param $infoText 主体内容
  * @param $user 举办者
  * @param $restNumber 剩余晋级数
+ * @param $infotitle 提示标题
  * @return string 页面
  */
-function gamePage($mainTitle, $gameName, int $runLevel, int $allLevel, $IDnums, $infoText, $user, $restNumber)
+function gamePage($mainTitle, $gameName, int $runLevel, int $allLevel, $IDnums, $infoText, $user, $restNumber, $infotitle = "")
 {
     $finishBar = ($runLevel == $allLevel + 1) ? "progress-bar-success" : "progress-bar-info";//进度条颜色
     $finishIco = ($runLevel == $allLevel + 1) ? "glyphicon-ok" : "glyphicon-map-marker";//图形样式
     if ($allLevel != 0) {
         $process = (int)($runLevel / $allLevel * 100);//进度条长短
-        if($process>100) $process=100;
+        if ($process > 100) $process = 100;
     } else $process = 0;
     $processNote = ($runLevel == $allLevel + 1) ? "完成任务" : " Step " . $runLevel;//进度条说明文字
-    $infoTitle = ($runLevel == $allLevel + 1) ? "你已经完成了任务，祝贺你！" : "你现在位于第" . $runLevel . "步，共" . $allLevel . "步，加油~";//进度提示说明文字
+    $infoTitle = ($runLevel == $allLevel + 1) ? $infotitle : "你现在位于第" . $runLevel . "步，共" . $allLevel . "步，加油~";//进度提示说明文字
     if ($runLevel == $allLevel) {//晋级名额剩余提示
         if ($restNumber < 0)
             $haveFinish = "";
@@ -182,7 +183,7 @@ function finishGame($IDnums)
     }
     $mysql->set_charset("utf8");
 
-    $sq = "SELECT * FROM config LIMIT 1";
+    $sq = "SELECT * FROM `config` LIMIT 1";
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
@@ -190,23 +191,17 @@ function finishGame($IDnums)
     $user = $row['user'];
     $gameName = $row['gamename'];
 
-    $sq = "SELECT * FROM `finishconfig`";
+    $sq = "SELECT * FROM `finishconfig` LIMIT 1";
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
     $infoText = $row['infotext'];
+    $infotitle = $row['infotitle'];
     $mysql->close();
 
-    echo gamePage("祝贺 - " . $mainTitle, $gameName, 2, 1, $IDnums, $infoText, $user, 0);
+    echo gamePage("祝贺 - " . $mainTitle, $gameName, 2, 1, $IDnums, $infoText, $user, 0, $infotitle);
     exit;
 }
 
-/**
- *
- */
-function getStep()
-{
-//TODO
-}
 
 ?>
