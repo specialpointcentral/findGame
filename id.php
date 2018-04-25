@@ -9,6 +9,7 @@
  * also if players input error id, this page will process the error requests
  */
 require_once "config.php";
+require_once "function.php";
 date_default_timezone_set('Asia/Shanghai');
 session_start();
 if (isset($_GET['key'])&&$_GET['key']=="clean")
@@ -66,7 +67,8 @@ if (strtotime(date("y-m-d H:i:s"))<=strtotime($startTime)){
     // game is over
     $mysql->close();
     header("http/1.1 403 forbidden");
-    echo("游戏已经结束");
+    noCertification("游戏已结束",
+        "<div class=\"helptextol\"><p>游戏已结束，让我们期待即将到来的读书节吧~</p></div>");
     exit;
 }
 

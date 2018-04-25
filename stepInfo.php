@@ -186,6 +186,13 @@ class stepInfo
         $result = $this->sqlquery($sq);
         if ($result->num_rows == 0) {
             //没有信息，建立信息，组号不进行检查，采用学号
+            //先判断-是否只允许内部
+            $sq = "SELECT `innerGame` FROM `config` LIMIT  1";
+            $result = $this->sqlquery($sq)->fetch_array();
+            if($result["innerGame"]==1) {
+                $this->club=-1;
+                return;
+            }
             $sq = "INSERT INTO `tbl_club` (`schoolID`, `clubNumber`, `innerPlay`) VALUES ('" . $this->idnum . "', '" . $this->idnum . "', '0')";
             $this->sqlquery($sq);
             $this->club = $this->idnum;

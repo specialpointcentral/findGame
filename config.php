@@ -8,8 +8,8 @@
  */
 $config=array(
     "SQL_URL"=>"localhost",
-    "SQL_User"=>"root",
-    "SQL_Password"=>"",
+    "SQL_User"=>"play",
+    "SQL_Password"=>"pXKxdrDBfETdiK3F",
     "SQL_Port"=>"3306",
-    "SQL_Database"=>"test",
+    "SQL_Database"=>"play",
 );

@@ -11,8 +11,9 @@ session_start();
 require_once "function.php";
 require_once "stepInfo.php";
 $getkey = isset($_GET['key']) ? $_GET['key'] : "";//密钥保存
+$getkey= preg_replace('/[^0-9a-zA-Z]+/','',$getkey);//去除危险字符
 if (isset($_SESSION['IDnum']) && !empty(trim($_SESSION['IDnum']))) {//session信息存在
-    $IDnums = $_SESSION['IDnum'];
+    $IDnums = (int)$_SESSION['IDnum'];
 } else {
     header("Location: id.php?key=" . $getkey);
     exit;
@@ -43,13 +44,19 @@ if (strtotime(date("y-m-d H:i:s"))<=strtotime($startTime)){
 }elseif(strtotime(date("y-m-d H:i:s"))>=strtotime($endTime)){
     // game is over
     header("http/1.1 403 forbidden");
-    echo("游戏已经结束");
+    noCertification("游戏已结束",
+        "<div class=\"helptextol\"><p>游戏已结束，让我们期待即将到来的读书节吧~</p></div>");
     exit;
 }
 
 
 $step = new stepInfo($IDnums);
 
+if ($step->getClub()==-1){
+    //拒绝参加
+    noCertification("你不能参加这次游戏",
+        "<ol class=\"helptextol\"><li>你没有报名参加此次游戏</li><li>你输错了学号</li></ol><a class=\"btn btn-success\" href='id.php?key=clean'>这里更改学号</a>");
+}
 
 if (empty(trim($getkey)) || $getkey == "reset") {
     //空的key，展示界面

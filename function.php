@@ -191,7 +191,7 @@ function finishGame($IDnums)
     $user = $row['user'];
     $gameName = $row['gamename'];
 
-    $sq = "SELECT * FROM `finishconfig` LIMIT 1";
+    $sq = "SELECT * FROM `finishConfig` LIMIT 1";
     $result = $mysql->query($sq);
     $row = $result->fetch_array();
 
